@@ -3,12 +3,15 @@ package parser
 import API.endpoints.ArtistEndpoints
 import API.token.Token._
 import com.typesafe.config.{Config, ConfigFactory}
-import org.apache.spark.sql.functions.{col, concat_ws, regexp_replace}
+import org.apache.spark.sql.functions.{col, concat_ws, lit, regexp_replace}
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import parser.ParserUtilities._
 import utils.StaticStrings._
 import ujson.Value
+
+import java.text.SimpleDateFormat
+import java.util.Calendar
 
 object Parser {
   val mToken: String = getToken
@@ -28,6 +31,9 @@ object Parser {
     /** CONF **/
     val lConf: Config = ConfigFactory.load("parser.conf")
     val lArtistsListPath: String = lConf.getString("path.artist.list")
+
+    val format = new SimpleDateFormat("YYYYMMdd")
+    val lToday: String = format.format(Calendar.getInstance().getTime())
 
     /** ARTISTS **/
     val lArtistsListDf: DataFrame = readFromCsv(lArtistsListPath)
@@ -53,16 +59,16 @@ object Parser {
     /** TOP TRACKS **/
 
     val lSchema = StructType(
-      StructField("artist_id", StringType, nullable = false) ::
-      StructField("track_id", StringType, nullable = true) ::
-      StructField("track_name", StringType, nullable = true) ::
-      StructField("track_popularity", StringType, nullable = true) ::
-      StructField("track_number", StringType, nullable = true) ::
-      StructField("album_id", StringType, nullable = true) ::
-      StructField("album_name", StringType, nullable = true) ::
-      StructField("album_date", StringType, nullable = true) ::
-      StructField("album_type", StringType, nullable = false) ::
-      StructField("type", StringType, nullable = false) :: Nil)
+      StructField(sArtistId, StringType, nullable = false) ::
+        StructField(sTrackId, StringType, nullable = true) ::
+        StructField(sTrackName, StringType, nullable = true) ::
+        StructField(sTrackPopularity, StringType, nullable = true) ::
+        StructField(sTrackNumber, StringType, nullable = true) ::
+        StructField(sAlbumId, StringType, nullable = true) ::
+        StructField(sAlbumName, StringType, nullable = true) ::
+        StructField(sAlbumDate, StringType, nullable = true) ::
+        StructField(sAlbumType, StringType, nullable = false) ::
+        StructField(sType, StringType, nullable = false) :: Nil)
 
     val lTopTracks = ujson.read(ArtistEndpoints.getArtistTopTracks(lArtistsList(0)))(sTracks)
     mSpark
@@ -98,6 +104,7 @@ object Parser {
     val lArtistWithTracksDf =
       lArtistsDf
         .join(lTopTracksDf, col(sId) === col(sArtistId))
+        .withColumn(sDate, lit(lToday))
         .drop(sId)
 
     lArtistWithTracksDf.show(false)

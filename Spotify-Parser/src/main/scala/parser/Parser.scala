@@ -36,7 +36,7 @@ object Parser {
     val format = new SimpleDateFormat("YYYYMMdd")
     val lToday: String = format.format(Calendar.getInstance().getTime)
 
-    /** ARTISTS * */
+    /** ARTISTS DATA * */
     val lArtistsListDf: DataFrame = readFromCsv(lArtistsListPath)
     val lArtistsList: List[String] = dataFrameToList(lArtistsListDf, sId)
     println(lArtistsList)
@@ -57,7 +57,7 @@ object Parser {
     lArtistsDf.show(false)
     lArtistsDf.printSchema()
 
-    /** TOP TRACKS * */
+    /** TOP TRACKS DATA * */
 
     val lSchema = StructType(
       StructField(sArtistId, StringType, nullable = false) ::
@@ -110,6 +110,7 @@ object Parser {
 
     lArtistWithTracksDf.show(false)
 
+    /** SAVE * */
     saveToParquet(lArtistWithTracksDf, lOutput, lToday)
   }
 }

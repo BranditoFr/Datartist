@@ -41,4 +41,15 @@ object ParserUtilities {
         .collect()
         .toList
   }
+
+  def saveToParquet(iDf: DataFrame, iPath: String, iToday: String): Unit = {
+    if (Files.exists(Paths.get(iPath))) {
+      println(s"""Save to parquet in folder: "$iPath"""")
+      iDf
+        .write
+        .parquet(iPath + "/" + iToday)
+    }else{
+      println(s"""Folder "$iPath" doesn't exist"""")
+    }
+  }
 }

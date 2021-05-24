@@ -12,6 +12,7 @@ dfStart = csvToDf(inPathArtists)
 ## Get data from youtube API (and selenium scraper if necessary)
 dfFinal = getDataFromYtbAPI(dfStart)
 print(dfFinal.to_string())
+
 ## Create file parquet
 dfToParquet(dfFinal,outPathParquet)
 ## End

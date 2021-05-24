@@ -4,12 +4,13 @@ listToDF        = []
 suscriberCount  = []
 channel         = []
 title           = []
-dateTime        = []
+date_video        = []
 liked           = []
 disliked        = []
 views           = []
 url             = []
 comment         = []
+lArtistsNames   = []
 todayDate       = (datetime.date.today()).strftime('%Y%m%d')
 ## Set nb videos we want scrap
 nbVideosToScrap = 10

@@ -17,6 +17,7 @@ nbVideosToScrap = 10
 inPathArtists   = "C:/Users/brand/Desktop/Projets perso/Projet music analytics/listArtist.csv"
 ## Out path to create parquet file from dataframe artists
 outPathParquet  = "C:/Users/brand/Desktop/Projets perso/Projet music analytics/parquetFile/"
+csvListArtist   = "C:/Users/brand/Desktop/Datartist/listArtist.csv"
 ## Youtube API key
 youTubeApiKey   = "AIzaSyDFF2AjGVG1WwZW8uCgo5yQtr16-rrv5aQ"
 ## Driver path (chrome)

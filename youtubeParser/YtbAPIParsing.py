@@ -95,5 +95,4 @@ def getDataFromYtbAPI(df):
     ## Put our data list in Dataframe and return df
     data = {'today':todayDate,'channel': channel, 'title': title, 'datetime': dateTime, 'liked': liked, 'disliked': disliked,
             'views': views, 'comment': comment, 'followers': suscriberCount, 'url': url}
-
     return pd.DataFrame(data)

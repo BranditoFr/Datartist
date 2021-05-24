@@ -61,5 +61,6 @@ def getAllVideosFromChannel(id,isChannel,nbOfVideos,path):
             break
     ## Close driver and return list of videos
     driver.close
+    print("Info: Fin du script d'automatisation.")
     return listVideos, listUrl
 

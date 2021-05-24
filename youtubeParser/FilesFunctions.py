@@ -15,7 +15,7 @@ def dfToParquet(df,outPath):
         today       = datetime.date.today()
         path        = os.path.join(outPath, today.strftime('%Y%m%d'))
         os.mkdir(path)
-        write("../parquetFile/"+today.strftime('%Y%m%d')+"/"+"youtube_artists.parquet", df)
+        write(outPath+today.strftime('%Y%m%d')+"/"+"youtube_artists.parquet", df)
         print("Info: Le fichier parquet a bien été créé.")
     except IOError:
         print("Erreur dfToParquet: Le fichier parquet n'a pas pu être créé suite à une erreur ou parce qu'il existe déjà.")

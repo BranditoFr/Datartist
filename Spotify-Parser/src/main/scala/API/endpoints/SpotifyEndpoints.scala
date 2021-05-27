@@ -4,7 +4,7 @@ import parser.Parser.mToken
 import scalaj.http.Http
 abstract class SpotifyEndpoints {
 
-  protected val baseAPIUrl = "https://api.spotify.com"
+  protected val lBaseAPIUrl = "https://api.spotify.com"
 
   protected def callRequest(iEndpoint: String): String = {
     Http(iEndpoint)

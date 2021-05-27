@@ -1,15 +1,14 @@
 package parser
 
-import API.endpoints.ArtistEndpoints
+import API.endpoints.{ArtistEndpoints, SearchEndpoints}
 import API.token.Token._
 import com.typesafe.config.{Config, ConfigFactory}
-import org.apache.spark.sql.functions.{col, concat_ws, lit}
+import org.apache.spark.sql.functions.{col, concat_ws, lit, lower, regexp_replace}
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import parser.ParserUtilities._
 import ujson.Value
 import utils.StaticStrings._
-
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
@@ -30,14 +29,59 @@ object Parser {
   def main(args: Array[String]): Unit = {
     /** CONF * */
     val lConf: Config = ConfigFactory.load("parser.conf")
-    val lArtistsListPath: String = lConf.getString("path.artist.list")
+    val lArtistsCommonListPath: String = lConf.getString("common.artists.list")
+    val lArtistsListPath: String = lConf.getString("spotify.artists.list")
     val lOutput: String = lConf.getString("output")
 
     val format = new SimpleDateFormat("YYYYMMdd")
     val lToday: String = format.format(Calendar.getInstance().getTime)
 
+    /** SEARCH ARTISTS ID */
+
+    val lArtistsListOldDf: DataFrame = readFromCsv(lArtistsListPath)
+    val lArtistsCommonListDf: DataFrame = readFromCsv(lArtistsCommonListPath)
+    lArtistsListOldDf.show(false)
+
+    val lArtistToSearch: DataFrame =
+      lArtistsCommonListDf
+        .select(regexp_replace(lower(col(sArtists))," ", "") as sArtists)
+      .except(
+        lArtistsListOldDf
+          .select(regexp_replace(lower(col(sName))," ", "") as sName)
+      )
+      .select(col(sArtists))
+    lArtistToSearch.show(false)
+
+    val lArtistsListDf: DataFrame =
+      if (lArtistToSearch.count() > 0) {
+        println("Search Other Artists")
+        val lArtistsSearchList: List[String] = dataFrameToList(lArtistToSearch, sArtists)
+
+        val lArtistSearchResultDf: DataFrame =
+          lArtistsSearchList.foldLeft(lArtistsListOldDf)((lAccDf, lArtist) => {
+            val lArtistData = ujson.read(SearchEndpoints.searchArtist(lArtist))(sArtists)(sItems)(0)
+            lAccDf.union(
+            mSpark
+              .read
+              .json(Seq(lArtistData.toString()).toDS)
+              .select(
+                sName,
+                sId
+              )
+            )
+          })
+        lArtistSearchResultDf.persist()
+        println(lArtistSearchResultDf.count())
+        saveToCsv(lArtistSearchResultDf, lArtistsListPath)
+        lArtistSearchResultDf.unpersist()
+
+        lArtistSearchResultDf
+      }else{
+        lArtistsListOldDf
+      }
+    lArtistsListDf.show(false)
+
     /** ARTISTS DATA * */
-    val lArtistsListDf: DataFrame = readFromCsv(lArtistsListPath)
     val lArtistsList: List[String] = dataFrameToList(lArtistsListDf, sId)
     println(lArtistsList)
 

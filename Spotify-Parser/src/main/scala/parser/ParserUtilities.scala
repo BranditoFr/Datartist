@@ -1,6 +1,6 @@
 package parser
 
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{DataFrame, SaveMode}
 import parser.Parser.mSpark
 import mSpark.implicits._
 
@@ -43,13 +43,31 @@ object ParserUtilities {
   }
 
   def saveToParquet(iDf: DataFrame, iPath: String, iToday: String): Unit = {
-    if (Files.exists(Paths.get(iPath))) {
-      println(s"""Save to parquet in folder: "$iPath"""")
+    val lTodayPath = iPath + "/" + iToday
+    if (Files.exists(Paths.get(lTodayPath))) {
+      println(s"""Folder "$lTodayPath" already exists"""")
+    }else{
+      println(s"""Save to parquet in folder: "$lTodayPath"""")
       iDf
         .write
-        .parquet(iPath + "/" + iToday)
-    }else{
-      println(s"""Folder "$iPath" doesn't exist"""")
+        .parquet(lTodayPath)
     }
+  }
+
+  def editCsv(iDf: DataFrame, iPathTmp: String, iPath: String): Unit = {
+    saveToCsv(iDf, iPathTmp)
+
+    saveToCsv(readFromCsv(iPathTmp), iPath)
+  }
+
+  def saveToCsv(iDf: DataFrame, iPath: String): Unit = {
+    iDf
+      .repartition(1)
+      .write
+      .format("csv")
+      .mode("overwrite")
+      .option("header", value = true)
+      .option("delimiter",";")
+      .save(iPath)
   }
 }

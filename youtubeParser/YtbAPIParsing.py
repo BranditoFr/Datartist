@@ -53,7 +53,7 @@ def getDataFromYtbAPI(df):
             scraperWithoutAPI = True
             videos = []
             if user != "Null":
-                ## Function need username/channel for artist, boolean to know if it's channel or username, nb videos to scrap, and path of a driver(chrome for exemple)
+                ## Function need username/channel for artist, boolean to know if it's channel or username, nb videos to scrap, and path for driver(chrome for exemple)
                 ## getAllVideos return tuple, list of videos and list of urls of this videos
                 listVideos, listUrl = getAllVideosFromChannel(user, False, nbVideosToScrap, driverPath)
             else:

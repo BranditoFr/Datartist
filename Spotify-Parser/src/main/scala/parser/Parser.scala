@@ -3,12 +3,14 @@ package parser
 import API.endpoints.{ArtistEndpoints, SearchEndpoints}
 import API.token.Token._
 import com.typesafe.config.{Config, ConfigFactory}
-import org.apache.spark.sql.functions.{col, concat_ws, lit, lower, regexp_replace}
-import org.apache.spark.sql.types.{StringType, StructField, StructType}
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import parser.ParserUtilities._
 import ujson.Value
+import utils.Schema._
 import utils.StaticStrings._
+
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
@@ -103,17 +105,7 @@ object Parser {
 
     /** TOP TRACKS DATA * */
 
-    val lSchema = StructType(
-      StructField(sArtistId, StringType, nullable = false) ::
-        StructField(sTrackId, StringType, nullable = true) ::
-        StructField(sTrackName, StringType, nullable = true) ::
-        StructField(sTrackPopularity, StringType, nullable = true) ::
-        StructField(sTrackNumber, StringType, nullable = true) ::
-        StructField(sAlbumId, StringType, nullable = true) ::
-        StructField(sAlbumName, StringType, nullable = true) ::
-        StructField(sAlbumDate, StringType, nullable = true) ::
-        StructField(sAlbumType, StringType, nullable = false) ::
-        StructField(sType, StringType, nullable = false) :: Nil)
+    val lSchema: StructType = getSchema
 
     //    val lTopTracks = ujson.read(ArtistEndpoints.getArtistTopTracks(lArtistsList(0)))(sTracks)
     //    mSpark

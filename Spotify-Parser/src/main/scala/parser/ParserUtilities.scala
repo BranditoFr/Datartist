@@ -7,7 +7,6 @@ import mSpark.implicits._
 import java.nio.file.{Files, Paths}
 
 object ParserUtilities {
-
   def readFromCsv(iPath: String): DataFrame = {
     if (Files.exists(Paths.get(iPath))) {
       println(s"""Read csv from "$iPath"""")
@@ -52,12 +51,6 @@ object ParserUtilities {
         .write
         .parquet(lTodayPath)
     }
-  }
-
-  def editCsv(iDf: DataFrame, iPathTmp: String, iPath: String): Unit = {
-    saveToCsv(iDf, iPathTmp)
-
-    saveToCsv(readFromCsv(iPathTmp), iPath)
   }
 
   def saveToCsv(iDf: DataFrame, iPath: String): Unit = {

@@ -1,7 +1,7 @@
 package utils
 
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
-import utils.StaticStrings.{sAlbumDate, sAlbumId, sAlbumName, sAlbumType, sArtistId, sTrackId, sTrackName, sTrackNumber, sTrackPopularity, sType}
+import utils.StaticStrings.{sAlbumDate, sAlbumId, sAlbumName, sAlbumType, sArtistId, sId, sTrackId, sTrackName, sTrackNumber, sTrackPopularity, sType}
 
 object Schema {
 
@@ -17,5 +17,10 @@ object Schema {
         StructField(sAlbumDate, StringType, nullable = true) ::
         StructField(sAlbumType, StringType, nullable = false) ::
         StructField(sType, StringType, nullable = false) :: Nil)
+  }
+
+  def getSchemaId: StructType = {
+    StructType(
+      StructField(sId, StringType, nullable = false) :: Nil)
   }
 }

@@ -4,6 +4,7 @@ object StaticStrings {
   val sId = "id"
   val sArtists = "artists"
   val sAlbum  = "album"
+  val sAlbums  = "albums"
   val sTracks  = "tracks"
   val sPopularity  = "popularity"
   val sName  = "name"
@@ -13,6 +14,9 @@ object StaticStrings {
   val sReleaseDate = "release_date"
   val sDate = "date"
   val sItems = "items"
+  val sTotalTracks = "total_tracks"
+  val sSingle = "single"
+  val sNameCommon = "name_common"
 
   val sTrackNumber  = "track_number"
   val sTrackPopularity = "track_popularity"
@@ -23,6 +27,7 @@ object StaticStrings {
   val sAlbumId = "album_id"
   val sAlbumType = "album_type"
   val sAlbumDate = "album_date"
+  val sAlbumPopularity = "album_popularity"
 
   val sArtistName = "artist_name"
   val sArtistId = "artist_id"

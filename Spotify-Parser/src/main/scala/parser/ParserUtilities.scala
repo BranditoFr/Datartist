@@ -3,6 +3,8 @@ package parser
 import org.apache.spark.sql.{DataFrame, SaveMode}
 import parser.Parser.mSpark
 import mSpark.implicits._
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.{FileStatus, FileSystem, Path}
 
 import java.nio.file.{Files, Paths}
 
@@ -62,5 +64,24 @@ object ParserUtilities {
       .option("header", value = true)
       .option("delimiter",";")
       .save(iPath)
+  }
+
+  def parquetToCsv(iParquetPath: String, iCsvPath: String): Unit = {
+    val fs = FileSystem.get(new Configuration())
+    val status: Array[FileStatus] = fs.listStatus(new Path(iParquetPath))
+    val lFolderList: Array[String] = status.map(x => iParquetPath + "/" + x.toString.split("/").last.split(";").head)
+
+    println(s"""Read parquet from "$iParquetPath"""")
+    val lDf =
+      mSpark
+      .read
+      .parquet(lFolderList: _*)
+
+    println(s"""Save to CSV in folder: "$iCsvPath"""")
+    lDf
+      .repartition(1)
+      .write
+      .mode(SaveMode.Overwrite)
+      .csv(iCsvPath)
   }
 }

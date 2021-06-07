@@ -84,4 +84,12 @@ object ParserUtilities {
       .mode(SaveMode.Overwrite)
       .csv(iCsvPath)
   }
+
+  def calculGroupMax(iMax: Int, iListLength: Int): Int ={
+    if (iListLength % iMax == 0) {
+      iListLength / iMax
+    } else {
+      (iListLength / iMax) + 1
+    }
+  }
 }

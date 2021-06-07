@@ -7,7 +7,6 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import parser.ParserUtilities._
-import ujson.Value
 import utils.Schema._
 import utils.StaticStrings._
 
@@ -96,7 +95,16 @@ object Parser {
     val lArtistsList: List[String] = dataFrameToList(lArtistsListDf, sId)
     println(lArtistsList)
 
-    val lArtistJson: Value = ujson.read(ArtistEndpoints.getArtists(lArtistsList))(sArtists)
+//    val lArtistLength: Int = lArtistsList.length
+//    val lArtistGroup: Int = calculGroupMax(lArtistsMaxRequest, lArtistLength)
+//    (0 until lArtistGroup).foldLeft("")((lAcc, lInt) => {
+//      val lMin: Int = lInt * lArtistsMaxRequest
+//      val lMax: Int = if (lInt != lArtistGroup) (lInt + 1) * lArtistsMaxRequest - 1 else lArtistLength
+//      lAcc ++
+//      ujson.read(ArtistEndpoints.getArtists(lArtistsList.slice(lMin, lMax)))(sArtists).toString()
+//    })
+
+    val lArtistJson =  ujson.read(ArtistEndpoints.getArtists(lArtistsList))(sArtists)
 
     val lArtistsDf: DataFrame =
       mSpark
@@ -122,7 +130,7 @@ object Parser {
 
     val lSchema: StructType = getSchema
 
-    val lTopTracksDf =
+    val lTopTracksDf: DataFrame =
       lArtistsList.foldLeft(mSpark.createDataFrame(mSpark.sparkContext.emptyRDD[Row], lSchema))((lAccDf, lArtist) => {
         val lTopTracksJson = ujson.read(ArtistEndpoints.getArtistTopTracks(lArtist))(sTracks)
 
@@ -150,7 +158,7 @@ object Parser {
     /** ALBUMS DATA */
     val lSchemaId: StructType = getSchemaId
 
-    val lAlbumsDf =
+    val lAlbumsDf: DataFrame =
       lArtistsList.foldLeft(mSpark.createDataFrame(mSpark.sparkContext.emptyRDD[Row], lSchemaId))((lAccDf, lArtist) => {
         val lAlbumsJson = ujson.read(ArtistEndpoints.getArtistAlbums(lArtist))(sItems)
         lAccDf.union(
@@ -166,82 +174,80 @@ object Parser {
     val lAlbumList: List[String] = dataFrameToList(lAlbumsDf, sId)
 
     val lAlbumListLength: Int = lAlbumList.length
-    val lAlbumGroup: Int =
-      if (lAlbumListLength % lAlbumsMaxRequest == 0) {
-        lAlbumListLength / lAlbumsMaxRequest
-      } else {
-        (lAlbumListLength / lAlbumsMaxRequest) + 1
-      }
 
-    val lAlbumsDataDf: DataFrame = (0 until lAlbumGroup).foldLeft(mSpark.createDataFrame(mSpark.sparkContext.emptyRDD[Row], lSchema))((lAccDf, lInt) => {
-      val lMin = lInt * lAlbumsMaxRequest
-      val lMax = if (lInt != lAlbumGroup) (lInt + 1) * lAlbumsMaxRequest - 1 else lAlbumListLength
+    val lAlbumGroup: Int = calculGroupMax(lAlbumsMaxRequest, lAlbumListLength)
 
-      val lAlbumsJson = ujson.read(AlbumEndpoints.getAlbums(lAlbumList.slice(lMin, lMax + 1)))(sAlbums)
 
-      lAccDf.union(
-        mSpark
-          .read
-          .json(Seq(lAlbumsJson.toString()).toDS)
-          .select(
-            col(sArtists + "." + sId).getItem(0) as sArtistId,
-            col(sTracks + "." + sItems + "." + sId) as sTrackId,
-            col(sTracks + "." + sItems + "." + sName) as sTrackName,
-            col(sPopularity) as sTrackPopularity,
-            col(sTotalTracks) as sTrackNumber,
-            col(sId) as sAlbumId,
-            col(sName) as sAlbumName,
-            col(sReleaseDate) as sAlbumDate,
-            col(sAlbumType),
-            col(sType)
-          )
-          .withColumn(sTrackId, concat_ws(",", col(sTrackId)))
-          .withColumn(sTrackName, concat_ws(",", col(sTrackName)))
-      )
+    val lAlbumsDataDf: DataFrame =
+      (0 until lAlbumGroup).foldLeft(mSpark.createDataFrame(mSpark.sparkContext.emptyRDD[Row], lSchema))((lAccDf, lInt) => {
+        val lMin: Int = lInt * lAlbumsMaxRequest
+        val lMax: Int = if (lInt != lAlbumGroup) (lInt + 1) * lAlbumsMaxRequest - 1 else lAlbumListLength
 
-    })
+        val lAlbumsJson = ujson.read(AlbumEndpoints.getAlbums(lAlbumList.slice(lMin, lMax + 1)))(sAlbums)
+
+        lAccDf.union(
+          mSpark
+            .read
+            .json(Seq(lAlbumsJson.toString()).toDS)
+            .select(
+              col(sArtists + "." + sId).getItem(0) as sArtistId,
+              col(sTracks + "." + sItems + "." + sId) as sTrackId,
+              col(sTracks + "." + sItems + "." + sName) as sTrackName,
+              col(sPopularity) as sTrackPopularity,
+              col(sTotalTracks) as sTrackNumber,
+              col(sId) as sAlbumId,
+              col(sName) as sAlbumName,
+              col(sReleaseDate) as sAlbumDate,
+              col(sAlbumType),
+              col(sType)
+            )
+            .withColumn(sTrackId, concat_ws(",", col(sTrackId)))
+            .withColumn(sTrackName, concat_ws(",", col(sTrackName)))
+        )
+
+      })
     lAlbumsDataDf.show(false)
 
     /** TRACKS FROM ALBUMS/SINGLES */
 
-    val lTracksList: List[String] = dataFrameToList(lAlbumsDataDf, sTrackId).mkString(",").split(",").toList
+    val lTracksList: List[String] =
+      dataFrameToList(lAlbumsDataDf, sTrackId)
+        .mkString(",")
+        .split(",")
+        .toList
+
     val lTracksLength: Int = lTracksList.length
-    println(lTracksLength)
 
-    val lTracksGroup: Int =
-      if (lAlbumListLength % lTracksMaxRequest == 0) {
-        lTracksLength / lTracksMaxRequest
-      } else {
-        (lTracksLength / lTracksMaxRequest) + 1
-      }
+    val lTracksGroup: Int = calculGroupMax(lTracksMaxRequest, lTracksLength)
 
-    val lTracksDataDf: DataFrame = (0 until lTracksGroup).foldLeft(mSpark.createDataFrame(mSpark.sparkContext.emptyRDD[Row], lSchema))((lAccDf, lInt) => {
-      val lMin = lInt * lTracksMaxRequest
-      val lMax = if (lInt != lTracksGroup) (lInt + 1) * lTracksMaxRequest - 1 else lTracksLength
+    val lTracksDataDf: DataFrame =
+      (0 until lTracksGroup).foldLeft(mSpark.createDataFrame(mSpark.sparkContext.emptyRDD[Row], lSchema))((lAccDf, lInt) => {
+        val lMin = lInt * lTracksMaxRequest
+        val lMax = if (lInt != lTracksGroup) (lInt + 1) * lTracksMaxRequest - 1 else lTracksLength
 
-      val lTracksJson = ujson.read(TrackEndpoints.getTracks(lTracksList.slice(lMin, lMax + 1)))(sTracks)
-      lAccDf.union(
-      mSpark
-        .read
-        .json(Seq(lTracksJson.toString()).toDS)
-        .select(
-          col(sArtists + "." + sId).getItem(0) as sArtistId,
-          col(sId) as sTrackId,
-          col(sName) as sTrackName,
-          col(sPopularity) as sTrackPopularity,
-          col(sTrackNumber) as sTrackNumber,
-          col(sAlbum + "." + sId) as sAlbumId,
-          col(sAlbum + "." + sName) as sAlbumName,
-          col(sAlbum + "." + sReleaseDate) as sAlbumDate,
-          col(sAlbum + "." + sAlbumType),
-          col(sType)
+        val lTracksJson = ujson.read(TrackEndpoints.getTracks(lTracksList.slice(lMin, lMax + 1)))(sTracks)
+        lAccDf.union(
+          mSpark
+            .read
+            .json(Seq(lTracksJson.toString()).toDS)
+            .select(
+              col(sArtists + "." + sId).getItem(0) as sArtistId,
+              col(sId) as sTrackId,
+              col(sName) as sTrackName,
+              col(sPopularity) as sTrackPopularity,
+              col(sTrackNumber) as sTrackNumber,
+              col(sAlbum + "." + sId) as sAlbumId,
+              col(sAlbum + "." + sName) as sAlbumName,
+              col(sAlbum + "." + sReleaseDate) as sAlbumDate,
+              col(sAlbum + "." + sAlbumType),
+              col(sType)
+            )
         )
-      )
-    })
+      })
 
     lTracksDataDf.show(false)
 
-    /** ALL DATA JOIN*/
+    /** ALL DATA JOIN */
 
     val lArtistWithDataDf =
       lArtistsDf
@@ -249,20 +255,21 @@ object Parser {
           lTopTracksDf
             .union(
               lAlbumsDataDf
-              .filter(col(sAlbumType) === sAlbum)
+                .filter(col(sAlbumType) === sAlbum)
             )
-          .union(lTracksDataDf),
+            .union(lTracksDataDf),
           col(sId) === col(sArtistId)
         )
         .withColumn(sDate, lit(lToday))
         .drop(sId)
+        .distinct()
 
     lArtistWithDataDf.show(false)
 
     /** SAVE * */
     saveToParquet(lArtistWithDataDf, lOutput, lTodayFolder)
 
-    //    parquetToCsv(lOutput, lOutputCsv)
+//    parquetToCsv(lOutput, lOutputCsv)
   }
 }
 

@@ -13,6 +13,7 @@ dfStart = csvToDf(inPathArtists)
 dfFinal = getDataFromYtbAPI(dfStart)
 print(dfFinal.to_string())
 
+
 ## Create file parquet
 dfToParquet(dfFinal,outPathParquet)
 ## End

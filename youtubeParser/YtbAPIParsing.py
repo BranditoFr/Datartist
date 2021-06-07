@@ -96,6 +96,6 @@ def getDataFromYtbAPI(df):
             lArtistsNames.append(row['artist'])
 
     ## Put our data list in Dataframe and return df
-    data    = {'artist_name':lArtistsNames,'date':todayDate,'channel': channel, 'title': title, 'date_video': date_video, 'liked': liked, 'disliked': disliked,
+    data    = {'artist_name':lArtistsNames,'date':todayWithBar,'channel': channel, 'title': title, 'date_video': date_video, 'liked': liked, 'disliked': disliked,
             'views': views, 'comment': comment, 'followers': suscriberCount, 'url': url}
     return pd.DataFrame(data)

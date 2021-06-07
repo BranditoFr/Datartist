@@ -20,7 +20,7 @@ def getAllVideosFromChannel(id,isChannel,nbOfVideos,path):
     driver          = webdriver.Chrome(path)
     ## Check if driver version is the same as browser version
     if driver.capabilities['browserVersion'][0:3] == driver.capabilities['chrome']['chromedriverVersion'][0:3]:
-        listUrl         = []
+        listUrl     = []
         ## Check if we have channel id or username
         if isChannel == False:
             driver.get(baseVideoUrl + user + id + '/videos')
@@ -28,7 +28,7 @@ def getAllVideosFromChannel(id,isChannel,nbOfVideos,path):
             driver.get(baseVideoUrl + channel + id + '/videos')
         time.sleep(5)
         ## Pass pop-up
-        WebDriverWait(driver, 10).until(EC.element_to_be_clickable(
+        WebDriverWait(driver, 5).until(EC.element_to_be_clickable(
             (By.XPATH, pathPopUp1))).click()
         time.sleep(5)
         count       = 0
@@ -39,10 +39,10 @@ def getAllVideosFromChannel(id,isChannel,nbOfVideos,path):
             if checkExistsByXpath(driver,'/html/body/ytd-app/div/ytd-page-manager/ytd-browse/ytd-two-column-browse-results-renderer/div[1]/ytd-section-list-renderer/div[2]/ytd-item-section-renderer/div[3]/ytd-grid-renderer/div[1]/ytd-grid-video-renderer[' + str(count) + ']/div[1]/div[1]') == True:
                 time.sleep(5)
                 try:
-                    WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH,
+                    WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH,
                                                                         '/html/body/ytd-app/div/ytd-page-manager/ytd-browse/ytd-two-column-browse-results-renderer/div[1]/ytd-section-list-renderer/div[2]/ytd-item-section-renderer/div[3]/ytd-grid-renderer/div[1]/ytd-grid-video-renderer[' + str(
                                                                             count) + ']/div[1]/div[1]'))).click()
-                    time.sleep(10)
+                    time.sleep(5)
                     url = driver.current_url
                     listUrl.append(driver.current_url)
                     splitVideos = "/watch?v="
@@ -55,7 +55,7 @@ def getAllVideosFromChannel(id,isChannel,nbOfVideos,path):
                     ## Check if pop up 'no thanks' appear and click if true
                     if checkExistsByXpath(driver,pathPopUp2) == True:
                         try:
-                            WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH,pathPopUp2))).click()
+                            WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH,pathPopUp2))).click()
                             time.sleep(5)
                         except WebDriverException:
                             print("Warning 'getAllVideosFromChannel': Pop-up contenant 'non merci' n'est pas cliquable.")

@@ -12,8 +12,9 @@ url             = []
 comment         = []
 lArtistsNames   = []
 todayDate       = (datetime.date.today()).strftime('%Y%m%d')
+todayWithBar    = (datetime.date.today()).strftime('%d-%m-%Y')
 ## Set nb videos we want scrap
-nbVideosToScrap = 10
+nbVideosToScrap = 20
 ## File contain the list of artist with channel/username
 inPathArtists   = "C:/Users/brand/Desktop/Projets perso/Projet music analytics/listArtist.csv"
 ## Out path to create parquet file from dataframe artists

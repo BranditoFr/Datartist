@@ -1,14 +1,26 @@
-package parser
+package com.spotify
 
 import org.apache.spark.sql.{DataFrame, SaveMode}
-import parser.Parser.mSpark
+import Parser.mSpark
+import com.typesafe.config.{Config, ConfigFactory}
 import mSpark.implicits._
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileStatus, FileSystem, Path}
 
+import java.io.File
 import java.nio.file.{Files, Paths}
 
 object ParserUtilities {
+
+  def getExternalConf(iRunMode: String, iConf: Config, iRessourceBasename: String = "", iFile: String = "conf.path"): Config ={
+    iRunMode match {
+      case "cluster" =>
+        mSpark.sparkContext.addFile(iConf.getString(iFile))
+        ConfigFactory.load(iRessourceBasename)
+      case _ =>
+        ConfigFactory.parseFile(new File(iConf.getString("conf.path")))
+    }
+  }
   def readFromCsv(iPath: String): DataFrame = {
     if (Files.exists(Paths.get(iPath))) {
       println(s"""Read csv from "$iPath"""")
@@ -82,6 +94,7 @@ object ParserUtilities {
       .repartition(1)
       .write
       .mode(SaveMode.Overwrite)
+      .option("header","true")
       .csv(iCsvPath)
   }
 

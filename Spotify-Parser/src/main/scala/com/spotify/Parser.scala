@@ -1,4 +1,4 @@
-package parser
+package com.spotify
 
 import API.endpoints.{AlbumEndpoints, ArtistEndpoints, SearchEndpoints, TrackEndpoints}
 import API.token.Token._
@@ -6,14 +6,16 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import parser.ParserUtilities._
+import ParserUtilities._
 import utils.Schema._
 import utils.StaticStrings._
 
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
 object Parser {
+  println("Start Spotify Parser")
   val mToken: String = getToken
 
   val mSpark: SparkSession =
@@ -27,17 +29,22 @@ object Parser {
 
   import mSpark.implicits._
 
-  def main(args: Array[String]): Unit = {
+  def main(iArgs: Array[String]): Unit = {
+    val lRunMode = iArgs(0)
     /** CONF * */
-    val lConf: Config = ConfigFactory.load("parser.conf")
-    val lArtistsCommonListPath: String = lConf.getString("common.artists.list")
-    val lArtistsListPath: String = lConf.getString("spotify.artists.list")
-    val lOutput: String = lConf.getString("output.parquet")
-    val lOutputCsv: String = lConf.getString("output.csv")
+    val lConfig: Config = ConfigFactory.parseResources("spotify.conf").getConfig(lRunMode)
+//    val lConfig: Config = ConfigFactory.parseFile(new File("D:\\ESGI\\M1\\PA\\Datartist\\Spotify-Parser\\src\\main\\ressources\\spotify.conf")).getConfig(lRunMode)
+    val lAppConf: Config = lConfig.getConfig("spotify")
+    val lAppParams: Config = getExternalConf(lRunMode, lAppConf, "spotify.conf")
+//    val lAppParams: Config = ConfigFactory.load("spotify")
+    val lArtistsCommonListPath: String = lAppParams.getString("common.artists.list")
+    val lArtistsListPath: String = lAppParams.getString("spotify.artists.list")
+    val lOutput: String = lAppParams.getString("output.parquet")
+    val lOutputCsv: String = lAppParams.getString("output.csv")
 
-    val lAlbumsMaxRequest: Int = lConf.getInt("request.albums.max")
-    val lTracksMaxRequest: Int = lConf.getInt("request.tracks.max")
-    val lArtistsMaxRequest: Int = lConf.getInt("request.artists.max")
+    val lAlbumsMaxRequest: Int = lAppParams.getInt("request.albums.max")
+    val lTracksMaxRequest: Int = lAppParams.getInt("request.tracks.max")
+    val lArtistsMaxRequest: Int = lAppParams.getInt("request.artists.max")
 
     val format = new SimpleDateFormat("dd/MM/yyyy")
     val formatFolder = new SimpleDateFormat("yyyyMMdd")

@@ -1,6 +1,6 @@
 package API.endpoints
 
-import parser.Parser.mToken
+import com.spotify.Parser.mToken
 import scalaj.http.Http
 abstract class SpotifyEndpoints {
 

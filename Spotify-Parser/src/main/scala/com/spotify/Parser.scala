@@ -2,15 +2,14 @@ package com.spotify
 
 import API.endpoints.{AlbumEndpoints, ArtistEndpoints, SearchEndpoints, TrackEndpoints}
 import API.token.Token._
+import com.spotify.ParserUtilities._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import ParserUtilities._
 import utils.Schema._
 import utils.StaticStrings._
 
-import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
@@ -33,10 +32,9 @@ object Parser {
     val lRunMode = iArgs(0)
     /** CONF * */
     val lConfig: Config = ConfigFactory.parseResources("spotify.conf").getConfig(lRunMode)
-//    val lConfig: Config = ConfigFactory.parseFile(new File("D:\\ESGI\\M1\\PA\\Datartist\\Spotify-Parser\\src\\main\\ressources\\spotify.conf")).getConfig(lRunMode)
     val lAppConf: Config = lConfig.getConfig("spotify")
     val lAppParams: Config = getExternalConf(lRunMode, lAppConf, "spotify.conf")
-//    val lAppParams: Config = ConfigFactory.load("spotify")
+    //    val lAppParams: Config = ConfigFactory.load("spotify")
     val lArtistsCommonListPath: String = lAppParams.getString("common.artists.list")
     val lArtistsListPath: String = lAppParams.getString("spotify.artists.list")
     val lOutput: String = lAppParams.getString("output.parquet")
@@ -102,16 +100,16 @@ object Parser {
     val lArtistsList: List[String] = dataFrameToList(lArtistsListDf, sId)
     println(lArtistsList)
 
-//    val lArtistLength: Int = lArtistsList.length
-//    val lArtistGroup: Int = calculGroupMax(lArtistsMaxRequest, lArtistLength)
-//    (0 until lArtistGroup).foldLeft("")((lAcc, lInt) => {
-//      val lMin: Int = lInt * lArtistsMaxRequest
-//      val lMax: Int = if (lInt != lArtistGroup) (lInt + 1) * lArtistsMaxRequest - 1 else lArtistLength
-//      lAcc ++
-//      ujson.read(ArtistEndpoints.getArtists(lArtistsList.slice(lMin, lMax)))(sArtists).toString()
-//    })
+    //    val lArtistLength: Int = lArtistsList.length
+    //    val lArtistGroup: Int = calculGroupMax(lArtistsMaxRequest, lArtistLength)
+    //    (0 until lArtistGroup).foldLeft("")((lAcc, lInt) => {
+    //      val lMin: Int = lInt * lArtistsMaxRequest
+    //      val lMax: Int = if (lInt != lArtistGroup) (lInt + 1) * lArtistsMaxRequest - 1 else lArtistLength
+    //      lAcc ++
+    //      ujson.read(ArtistEndpoints.getArtists(lArtistsList.slice(lMin, lMax)))(sArtists).toString()
+    //    })
 
-    val lArtistJson =  ujson.read(ArtistEndpoints.getArtists(lArtistsList))(sArtists)
+    val lArtistJson = ujson.read(ArtistEndpoints.getArtists(lArtistsList))(sArtists)
 
     val lArtistsDf: DataFrame =
       mSpark
@@ -276,7 +274,7 @@ object Parser {
     /** SAVE * */
     saveToParquet(lArtistWithDataDf, lOutput, lTodayFolder)
 
-//    parquetToCsv(lOutput, lOutputCsv)
+    //    parquetToCsv(lOutput, lOutputCsv)
   }
 }
 

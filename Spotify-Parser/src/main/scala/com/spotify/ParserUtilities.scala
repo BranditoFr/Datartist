@@ -48,11 +48,11 @@ object ParserUtilities {
   }
 
   def dataFrameToList(iDf: DataFrame, iCol: String): List[String] = {
-      iDf
-        .select(iCol)
-        .map(lData => lData.getString(0))
-        .collect()
-        .toList
+    iDf
+      .select(iCol)
+      .map(lData => lData.getString(0))
+      .collect()
+      .toList
   }
 
   def saveToParquet(iDf: DataFrame, iPath: String, iToday: String): Unit = {
@@ -86,8 +86,8 @@ object ParserUtilities {
     println(s"""Read parquet from "$iParquetPath"""")
     val lDf =
       mSpark
-      .read
-      .parquet(lFolderList: _*)
+        .read
+        .parquet(lFolderList: _*)
 
     println(s"""Save to CSV in folder: "$iCsvPath"""")
     lDf

@@ -13,6 +13,7 @@ import utils.StaticStrings._
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
+
 object Parser {
   println("Start Spotify Parser")
   val mToken: String = getToken
@@ -277,4 +278,5 @@ object Parser {
     //    parquetToCsv(lOutput, lOutputCsv)
   }
 }
+
 

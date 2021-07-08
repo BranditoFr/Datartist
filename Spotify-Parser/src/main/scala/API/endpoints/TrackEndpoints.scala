@@ -1,11 +1,11 @@
 package API.endpoints
 
 object TrackEndpoints extends SpotifyEndpoints {
-  private val tracksEndpoint = baseAPIUrl + "/v1/tracks/"
+  private val lTracksEndpoint = lBaseAPIUrl + "/v1/tracks/"
 
   def getTrack(trackId: String): String =
-    callRequest(tracksEndpoint + trackId)
+    callRequest(lTracksEndpoint + trackId)
 
   def getTracks(trackIds: List[String]): String =
-    callRequest(tracksEndpoint, iParams = List(("ids", trackIds.mkString(","))))
+    callRequest(lTracksEndpoint, iParams = List(("ids", trackIds.mkString(","))))
 }

@@ -12,7 +12,7 @@ object StaticStrings {
   val sFollowers = "followers"
   val sTotal = "total"
   val sReleaseDate = "release_date"
-  val sDate = "date"
+  val sDate = "date_save"
   val sItems = "items"
   val sTotalTracks = "total_tracks"
   val sSingle = "single"

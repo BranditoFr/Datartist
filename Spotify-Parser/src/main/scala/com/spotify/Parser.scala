@@ -10,6 +10,7 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import utils.Schema._
 import utils.StaticStrings._
 
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
@@ -31,19 +32,31 @@ object Parser {
 
   def main(iArgs: Array[String]): Unit = {
     val lRunMode = iArgs(0)
-    /** CONF * */
-    val lConfig: Config = ConfigFactory.parseResources("spotify.conf").getConfig(lRunMode)
-    val lAppConf: Config = lConfig.getConfig("spotify")
-    val lAppParams: Config = getExternalConf(lRunMode, lAppConf, "spotify.conf")
-    //    val lAppParams: Config = ConfigFactory.load("spotify")
-    val lArtistsCommonListPath: String = lAppParams.getString("common.artists.list")
-    val lArtistsListPath: String = lAppParams.getString("spotify.artists.list")
-    val lOutput: String = lAppParams.getString("output.parquet")
-    val lOutputCsv: String = lAppParams.getString("output.csv")
 
-    val lAlbumsMaxRequest: Int = lAppParams.getInt("request.albums.max")
-    val lTracksMaxRequest: Int = lAppParams.getInt("request.tracks.max")
-    val lArtistsMaxRequest: Int = lAppParams.getInt("request.artists.max")
+    /** CONF * */
+
+//    if (lRunMode == "cluster"){
+//      val lArtistsCommonListPath: String = "/work/conf/listArtist.csv"
+//      val lArtistsListPath: String = "/work/conf/listArtistSpotify/"
+//      val lOutput: String = "/work/output/spotify/"
+//      val lOutputCsv: String = "/work/conf/"
+//      val lAlbumsMaxRequest: Int = 20
+//      val lTracksMaxRequest: Int = 50
+//      val lArtistsMaxRequest: Int = 50
+
+//    }else{
+      val lConfig: Config = ConfigFactory.parseResources("spotify.conf").getConfig(lRunMode)
+      val lAppConf: Config = lConfig.getConfig("spotify")
+      val lAppParams: Config = getExternalConf(lRunMode, lAppConf, "spotify.conf")
+//          val lAppParams: Config = ConfigFactory.load("spotify")
+          val lArtistsCommonListPath: String = lAppParams.getString("common.artists.list")
+          val lArtistsListPath: String = lAppParams.getString("spotify.artists.list")
+          val lOutput: String = lAppParams.getString("output.parquet")
+          val lOutputCsv: String = lAppParams.getString("output.csv")
+          val lAlbumsMaxRequest: Int = lAppParams.getInt("request.albums.max")
+          val lTracksMaxRequest: Int = lAppParams.getInt("request.tracks.max")
+          val lArtistsMaxRequest: Int = lAppParams.getInt("request.artists.max")
+//    }
 
     val format = new SimpleDateFormat("dd/MM/yyyy")
     val formatFolder = new SimpleDateFormat("yyyyMMdd")
@@ -52,8 +65,8 @@ object Parser {
 
     /** SEARCH ARTISTS ID */
 
-    val lArtistsListOldDf: DataFrame = readFromCsv(lArtistsListPath)
-    val lArtistsCommonListDf: DataFrame = readFromCsv(lArtistsCommonListPath)
+    val lArtistsListOldDf: DataFrame = readFromCsv(lArtistsListPath, lRunMode)
+    val lArtistsCommonListDf: DataFrame = readFromCsv(lArtistsCommonListPath, lRunMode)
     lArtistsListOldDf.show(false)
 
     val lArtistToSearch: DataFrame =
@@ -271,11 +284,10 @@ object Parser {
         .distinct()
 
     lArtistWithDataDf.show(false)
-
     /** SAVE * */
-    saveToParquet(lArtistWithDataDf, lOutput, lTodayFolder)
+    saveToParquet(lArtistWithDataDf, lOutput, lTodayFolder, lRunMode)
 
-    //    parquetToCsv(lOutput, lOutputCsv)
+//  parquetToCsv(lOutput, lOutputCsv)
   }
 }
 

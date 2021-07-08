@@ -6,11 +6,14 @@ import com.typesafe.config.{Config, ConfigFactory}
 import mSpark.implicits._
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileStatus, FileSystem, Path}
+import org.apache.spark.sql.functions.col
 
 import java.io.File
 import java.nio.file.{Files, Paths}
 
 object ParserUtilities {
+
+  val mFs: FileSystem = FileSystem.get(mSpark.sparkContext.hadoopConfiguration)
 
   def getExternalConf(iRunMode: String, iConf: Config, iRessourceBasename: String = "", iFile: String = "conf.path"): Config ={
     iRunMode match {
@@ -21,8 +24,18 @@ object ParserUtilities {
         ConfigFactory.parseFile(new File(iConf.getString("conf.path")))
     }
   }
-  def readFromCsv(iPath: String): DataFrame = {
-    if (Files.exists(Paths.get(iPath))) {
+
+  def checkExist(iRunMode: String, iPath: String): Boolean = {
+      iRunMode match {
+        case "cluster" => mFs.exists(new Path(iPath))
+        case _ => Files.exists(Paths.get(iPath))
+      }
+  }
+
+  def readFromCsv(iPath: String, iRunMode: String): DataFrame = {
+    val lExist = checkExist(iRunMode, iPath)
+
+    if (lExist) {
       println(s"""Read csv from "$iPath"""")
       mSpark
         .read
@@ -35,8 +48,10 @@ object ParserUtilities {
     }
   }
 
-  def readFromJson(iPath: String): DataFrame = {
-    if (Files.exists(Paths.get(iPath))) {
+  def readFromJson(iPath: String, iRunMode: String): DataFrame = {
+    val lExist = checkExist(iRunMode, iPath)
+
+    if (lExist) {
       println(s"""Read csv from "$iPath"""")
       mSpark
         .read
@@ -50,14 +65,15 @@ object ParserUtilities {
   def dataFrameToList(iDf: DataFrame, iCol: String): List[String] = {
     iDf
       .select(iCol)
-      .map(lData => lData.getString(0))
+      .map(_.getString(0))
       .collect()
       .toList
   }
 
-  def saveToParquet(iDf: DataFrame, iPath: String, iToday: String): Unit = {
+  def saveToParquet(iDf: DataFrame, iPath: String, iToday: String, iRunMode: String): Unit = {
     val lTodayPath = iPath + "/" + iToday
-    if (Files.exists(Paths.get(lTodayPath))) {
+    val lExist = checkExist(iRunMode, lTodayPath)
+    if (lExist) {
       println(s"""Folder "$lTodayPath" already exists"""")
     }else{
       println(s"""Save to parquet in folder: "$lTodayPath"""")
@@ -68,14 +84,14 @@ object ParserUtilities {
   }
 
   def saveToCsv(iDf: DataFrame, iPath: String): Unit = {
-    iDf
-      .repartition(1)
-      .write
-      .format("csv")
-      .mode("overwrite")
-      .option("header", value = true)
-      .option("delimiter",";")
-      .save(iPath)
+      iDf
+        .repartition(1)
+        .write
+        .format("csv")
+        .mode("overwrite")
+        .option("header", value = true)
+        .option("delimiter", ";")
+        .save(iPath)
   }
 
   def parquetToCsv(iParquetPath: String, iCsvPath: String): Unit = {
@@ -104,5 +120,25 @@ object ParserUtilities {
     } else {
       (iListLength / iMax) + 1
     }
+  }
+
+  def updateColumnsName(iPath: String, iColNameOld: String, iColNameNew: String): Unit = {
+    val listFolders = new File(iPath + "/old/").listFiles
+      .filter(_.isDirectory)
+      .map(iPath + "/old/" + _.getName)
+      .toList
+
+    println(listFolders)
+
+    val df = mSpark.read.parquet(listFolders: _*)
+
+    val dateList: List[String] = df.select(iColNameOld).map(_.getString(0)).distinct().collect().toList
+    println(dateList)
+    val dfRename = df.withColumnRenamed(iColNameOld, iColNameNew)
+    dateList.foreach(date =>{
+      val dateSplit = date.split("/")
+      val datePath = iPath + "/" + dateSplit(2) + dateSplit(1) + dateSplit(0)
+      dfRename.where(col(iColNameNew) === date).write.parquet(datePath)
+    })
   }
 }

@@ -1,9 +1,15 @@
-from SeleniumScraper import getChannelIntoCsv
 from Imports import *
 from GlobalsVariables import *
 
-csvFile = ["booba", "koba la d", "vald", "niska", "ash kidd", "hamza", "ateyaba", "djadja&dinaz", "PNL",
-               "gazo", "nekfeu", "nadirmusic", "jok'air", "kaaris", "kalash criminel", "jul", "naps", "jsx"]
+listArtist = []
+try:
+    data = pd.read_csv(csvListArtist, sep=';')
+    dfFromCsv = pd.DataFrame(data, columns=['artists'])
+except IOError:
+    print("Erreur csvToDf: Le dataframe n'a pas pu être créé à partir du csv.")
+
+for index, row in dfFromCsv.iterrows():
+    listArtist.append(row['artists'])
 ##getChannelIntoCsv(listArtists)
 driver = webdriver.Chrome(driverPath)
 driver.get("https://www.youtube.com/")
@@ -11,7 +17,7 @@ time.sleep(5)
 WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, pathPopUp1))).click()
 with open('../listArtists.csv', 'w', newline='') as outfile:
     writer = csv.writer(outfile)
-    for artist in csvFile:
+    for artist in listArtist:
         driver.find_element_by_xpath("//input[@id='search']").clear()
         search = driver.find_element_by_xpath("//input[@id='search']")
         search.send_keys(artist)

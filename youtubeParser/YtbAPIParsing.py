@@ -14,6 +14,7 @@ def getDataFromYtbAPI(df):
         channelId           = row['channel']
         stats               = []
         videos              = []
+
         ## Get different categories of informations (statistics, snippet, content) about artists by channel id or username
         if user != "Null":
             statdata = youtube.channels().list(part='statistics', forUsername=user).execute()
@@ -52,7 +53,7 @@ def getDataFromYtbAPI(df):
             scraperWithoutAPI = True
             videos = []
             if user != "Null":
-                ## Function need username/channel for artist, boolean to know if it's channel or username, nb videos to scrap, and path of a driver(chrome for exemple)
+                ## Function need username/channel for artist, boolean to know if it's channel or username, nb videos to scrap, and path for driver(chrome for exemple)
                 ## getAllVideos return tuple, list of videos and list of urls of this videos
                 listVideos, listUrl = getAllVideosFromChannel(user, False, nbVideosToScrap, driverPath)
             else:
@@ -82,7 +83,8 @@ def getDataFromYtbAPI(df):
             ## Get the channel name in channel variable
             channel.append(snippetdata['items'][0]['snippet']['title'])
             title.append((videos[i])['snippet']['title'])
-            dateTime.append((videos[i])['snippet']['publishedAt'])
+            sTemp = ((videos[i])['snippet']['publishedAt']).replace("T"," ")
+            date_video.append(sTemp.replace("Z",""))
             if scraperWithoutAPI == False:
                 url.append("https://www.youtube.com/watch?v=" + (videos[i])['snippet']['resourceId']['videoId'])
             else:
@@ -91,9 +93,9 @@ def getDataFromYtbAPI(df):
             disliked.append(int((stats[i])['statistics']['dislikeCount']))
             views.append(int((stats[i])['statistics']['viewCount']))
             comment.append(int((stats[i])['statistics']['commentCount']))
+            lArtistsNames.append(row['artist'])
 
     ## Put our data list in Dataframe and return df
-    data = {'today':todayDate,'channel': channel, 'title': title, 'datetime': dateTime, 'liked': liked, 'disliked': disliked,
+    data    = {'artist_name':lArtistsNames,'date_save':todayWithBar,'channel': channel, 'title': title, 'date_video': date_video, 'liked': liked, 'disliked': disliked,
             'views': views, 'comment': comment, 'followers': suscriberCount, 'url': url}
-
     return pd.DataFrame(data)

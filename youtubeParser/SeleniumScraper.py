@@ -17,7 +17,11 @@ def getAllVideosFromChannel(id,isChannel,nbOfVideos,path):
     baseVideoUrl    = 'https://www.youtube.com/'
     channel         = 'channel/'
     user            = 'user/'
-    driver          = webdriver.Chrome(path)
+    ## Set options to run selenium without head (no graphic)
+    from selenium.webdriver.chrome.options import Options
+    chromeOptions = Options()
+    chromeOptions.headless = True
+    driver          = webdriver.Chrome(path, options=chromeOptions)
     ## Check if driver version is the same as browser version
     if driver.capabilities['browserVersion'][0:3] == driver.capabilities['chrome']['chromedriverVersion'][0:3]:
         listUrl     = []
@@ -28,8 +32,7 @@ def getAllVideosFromChannel(id,isChannel,nbOfVideos,path):
             driver.get(baseVideoUrl + channel + id + '/videos')
         time.sleep(5)
         ## Pass pop-up
-        WebDriverWait(driver, 5).until(EC.element_to_be_clickable(
-            (By.XPATH, pathPopUp1))).click()
+        WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, pathPopUp1))).click()
         time.sleep(5)
         count       = 0
         listVideos  = []
@@ -64,6 +67,7 @@ def getAllVideosFromChannel(id,isChannel,nbOfVideos,path):
     else:
         print("Info selenium: Le driver et le browser chrome sont d'une version différente.")
     ## Close driver and return list of videos
+
     driver.close
     print("Info: Fin du script d'automatisation.")
     return listVideos, listUrl

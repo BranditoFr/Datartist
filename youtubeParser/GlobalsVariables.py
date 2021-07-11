@@ -2,6 +2,8 @@ from Imports import *
 ## Globals variables
 listToDF        = []
 suscriberCount  = []
+viewCount       = []
+videoCount      = []
 channel         = []
 title           = []
 date_video      = []

@@ -26,6 +26,7 @@ def getDataFromYtbAPI(df):
             contentdata = youtube.channels().list(part='contentDetails', id=channelId).execute()
         ## Get total subscriber
         statist = statdata['items'][0]['statistics']
+
         ## Get playlist Id to get the video details in variable videos
         playlistId = contentdata['items'][0]['contentDetails']['relatedPlaylists']['uploads']
         nextPageToken = None
@@ -78,8 +79,10 @@ def getDataFromYtbAPI(df):
             nbVideos = len(videos)
         ## Get content of each videos
         for i in range(nbVideos):
-            ## Get count of subscribers in suscriberCount variable
+            ## Get count of subscribers, views, and videos of the channel
             suscriberCount.append(statist['subscriberCount'])
+            viewCount.append(statist['viewCount'])
+            videoCount.append(statist['videoCount'])
             ## Get the channel name in channel variable
             channel.append(snippetdata['items'][0]['snippet']['title'])
             title.append((videos[i])['snippet']['title'])
@@ -97,5 +100,5 @@ def getDataFromYtbAPI(df):
 
     ## Put our data list in Dataframe and return df
     data    = {'artist_name':lArtistsNames,'date_save':todayWithBar,'channel': channel, 'title': title, 'date_video': date_video, 'liked': liked, 'disliked': disliked,
-            'views': views, 'comment': comment, 'followers': suscriberCount, 'url': url}
+            'views': views, 'comment': comment, 'followers': suscriberCount, 'total_views':viewCount, 'total_videos' :videoCount, 'url': url}
     return pd.DataFrame(data)
